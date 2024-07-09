@@ -1,0 +1,16 @@
+export component MainWindow inherits Window {
+    width: 320px;
+    height: 240px;
+    title: "Test";
+    background: #FFFFFF;
+    default-font-family: "Noto Sans";
+    default-font-size: 12px;
+
+    main-view := Rectangle {
+        property <length> margin: 5px;
+        height: parent.height - self.margin * 2;
+        width: parent.width - self.margin;
+        background: #FF0000;
+        border-radius: 15px;
+    }
+}

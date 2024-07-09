@@ -1,0 +1,9 @@
+[package]
+name = "slint-adapter"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+ctru-rs.workspace = true
+ctru-sys.workspace = true
+slint.workspace = true

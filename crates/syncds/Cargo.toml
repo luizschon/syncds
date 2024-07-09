@@ -1,0 +1,14 @@
+[package]
+name = "syncds"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+ctru-rs.workspace = true
+slint.workspace = true
+
+[build-dependencies]
+slint-build = "1.6.0"
+
+[package.metadata.cargo-3ds]
+romfs_dir = "romfs"
