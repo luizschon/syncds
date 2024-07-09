@@ -1945,15 +1945,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "slint-adapter"
-version = "0.1.0"
-dependencies = [
- "ctru-rs",
- "ctru-sys",
- "slint",
-]
-
-[[package]]
 name = "slint-build"
 version = "1.6.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1975,6 +1966,15 @@ dependencies = [
  "proc-macro2",
  "quote",
  "spin_on",
+]
+
+[[package]]
+name = "slint_adapter"
+version = "0.1.0"
+dependencies = [
+ "ctru-rs",
+ "ctru-sys",
+ "slint",
 ]
 
 [[package]]
@@ -2112,6 +2112,7 @@ dependencies = [
  "ctru-rs",
  "slint",
  "slint-build",
+ "slint_adapter",
 ]
 
 [[package]]
