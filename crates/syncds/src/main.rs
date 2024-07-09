@@ -1,21 +1,14 @@
 use ctru::prelude::*;
+use slint_adapter::backend as backend_3ds;
 
 slint::include_modules!();
 
 fn main() {
     let apt = Apt::new().expect("Couldn't obtain APT controller");
-    let test = Test::new().unwrap();
-    let mut quit = false;
-
-    test.on_quit(move || {
-        slint::quit_event_loop().unwrap();
-        quit = true;
-    });
+    backend_3ds::init();
+    let test = MainWindow::new().unwrap();
 
     while apt.main_loop() {
         test.run().unwrap();
-        if quit {
-            break;
-        }
     }
 }

@@ -11,3 +11,4 @@ slint = { version = "1.6.0", default-features = false, features = [
     "renderer-software",
     "libm",
 ] }
+slint_adapter = { path = "crates/slint_adapter" }
