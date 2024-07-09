@@ -1,24 +1,21 @@
 use ctru::prelude::*;
-use ctru::services::gfx::Flush;
 use ctru::services::{
     gfx::{Flush, Screen, Swap},
     gspgpu::FramebufferFormat,
 };
-use slint::platform::software_renderer::{self, Rgb565Pixel, SoftwareRenderer, TargetPixel};
 use slint::{
     platform::{
-        software_renderer::{MinimalSoftwareWindow, RepaintBufferType},
+        software_renderer::{MinimalSoftwareWindow, RepaintBufferType, Rgb565Pixel},
         Platform, WindowAdapter,
     },
     PhysicalSize,
 };
-use std::intrinsics::size_of;
 use std::{cell::RefCell, rc::Rc, time::Instant};
 
 const DISPLAY_WIDTH: usize = 320;
 const DISPLAY_HEIGHT: usize = 240;
-static mut FB1: [TargetPixel; DISPLAY_WIDTH * DISPLAY_HEIGHT] =
-    [software_renderer::Rgb565Pixel(0); DISPLAY_WIDTH * DISPLAY_HEIGHT];
+static mut FB1: [Rgb565Pixel; DISPLAY_WIDTH * DISPLAY_HEIGHT] =
+    [Rgb565Pixel(0); DISPLAY_WIDTH * DISPLAY_HEIGHT];
 
 pub struct GraphicsBackend {
     window: RefCell<Option<Rc<MinimalSoftwareWindow>>>,
@@ -27,13 +24,13 @@ pub struct GraphicsBackend {
 
 impl Platform for GraphicsBackend {
     fn create_window_adapter(&self) -> Result<Rc<dyn WindowAdapter>, slint::PlatformError> {
-        let window = MinimalSoftwareWindow::new(RepaintBufferType::SwappedBuffers);
+        let window = MinimalSoftwareWindow::new(RepaintBufferType::ReusedBuffer);
         self.window.replace(Some(window.clone()));
         Ok(window)
     }
 
     fn duration_since_start(&self) -> core::time::Duration {
-        core::time::Duration::from_micros(self.start_time.elapsed().as_micros() as u64)
+        self.start_time.elapsed()
     }
 
     fn run_event_loop(&self) -> Result<(), slint::PlatformError> {
@@ -43,7 +40,6 @@ impl Platform for GraphicsBackend {
         top_screen.set_double_buffering(false);
         top_screen.set_framebuffer_format(FramebufferFormat::Rgb565);
         top_screen.swap_buffers();
-        let (width, height) = (framebuffer.width, framebuffer.height);
 
         let _console = Console::new(gfx.bottom_screen.borrow_mut());
         println!("\x1b[21;4HPress A to flip the image.");
@@ -51,7 +47,7 @@ impl Platform for GraphicsBackend {
 
         let fb = unsafe { &mut *core::ptr::addr_of_mut!(FB1) };
 
-        let mut buffer: &mut [TargetPixel] = fb;
+        let mut buffer: &mut [Rgb565Pixel] = fb;
 
         self.window
             .borrow()
@@ -68,15 +64,13 @@ impl Platform for GraphicsBackend {
             if let Some(window) = self.window.borrow().clone() {
                 window.draw_if_needed(|renderer| {
                     gfx.wait_for_vblank();
-                    renderer.render(buffer, DISPLAY_WIDTH);
+                    renderer.render(&mut buffer, DISPLAY_WIDTH);
 
                     let framebuffer = top_screen.raw_framebuffer();
                     unsafe {
                         framebuffer.ptr.copy_from(
-                            buffer.as_ptr(),
-                            DISPLAY_WIDTH
-                                * DISPLAY_HEIGHT
-                                * size_of::<software_renderer::Rgb565Pixel>(),
+                            buffer.as_ptr().cast::<u8>(),
+                            DISPLAY_WIDTH * DISPLAY_HEIGHT * 2,
                         )
                     }
 
@@ -91,4 +85,12 @@ impl Platform for GraphicsBackend {
             }
         }
     }
+}
+
+pub fn init() {
+    slint::platform::set_platform(Box::new(GraphicsBackend {
+        window: Default::default(),
+        start_time: Instant::now(),
+    }))
+    .expect("Slint backend already initialized.");
 }
