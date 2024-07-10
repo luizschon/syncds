@@ -5,21 +5,38 @@ use ctru::services::{
 };
 use slint::{
     platform::{
-        software_renderer::{MinimalSoftwareWindow, RepaintBufferType, Rgb565Pixel},
+        software_renderer::{MinimalSoftwareWindow, RepaintBufferType, TargetPixel},
         Platform, WindowAdapter,
     },
     PhysicalSize,
 };
-use std::{cell::RefCell, rc::Rc, time::Instant};
+use std::{cell::RefCell, rc::Rc};
 
-const DISPLAY_WIDTH: usize = 320;
-const DISPLAY_HEIGHT: usize = 240;
-static mut FB1: [Rgb565Pixel; DISPLAY_WIDTH * DISPLAY_HEIGHT] =
-    [Rgb565Pixel(0); DISPLAY_WIDTH * DISPLAY_HEIGHT];
+#[derive(Debug, PartialEq, Clone, Copy)]
+struct Rgba8Pixel(u32);
+
+impl TargetPixel for Rgba8Pixel {
+    fn blend(&mut self, _color: slint::platform::software_renderer::PremultipliedRgbaColor) {
+        ()
+    }
+
+    fn from_rgb(red: u8, green: u8, blue: u8) -> Self {
+        Self((red as u32) << 24 | (green as u32) << 16 | (blue as u32) << 8 | 0xFF)
+    }
+
+    fn background() -> Self {
+        Self(u32::MAX)
+    }
+}
+
+const DISPLAY_WIDTH: usize = 240;
+const DISPLAY_HEIGHT: usize = 400;
+static mut FB1: [Rgba8Pixel; DISPLAY_WIDTH * DISPLAY_HEIGHT] =
+    [Rgba8Pixel(0); DISPLAY_WIDTH * DISPLAY_HEIGHT];
 
 pub struct GraphicsBackend {
     window: RefCell<Option<Rc<MinimalSoftwareWindow>>>,
-    start_time: Instant,
+    start_time: std::time::Instant,
 }
 
 impl Platform for GraphicsBackend {
@@ -38,16 +55,13 @@ impl Platform for GraphicsBackend {
         let mut hid = Hid::new().expect("Couldn't obtain HID Controller");
         let mut top_screen = gfx.top_screen.borrow_mut();
         top_screen.set_double_buffering(false);
-        top_screen.set_framebuffer_format(FramebufferFormat::Rgb565);
+        top_screen.set_framebuffer_format(FramebufferFormat::Rgba8);
         top_screen.swap_buffers();
-
-        let _console = Console::new(gfx.bottom_screen.borrow_mut());
-        println!("\x1b[21;4HPress A to flip the image.");
-        println!("\x1b[29;16HPress Start to exit");
+        let mut console = Console::new(gfx.bottom_screen.borrow_mut());
 
         let fb = unsafe { &mut *core::ptr::addr_of_mut!(FB1) };
 
-        let mut buffer: &mut [Rgb565Pixel] = fb;
+        let mut buffer: &mut [Rgba8Pixel] = fb;
 
         self.window
             .borrow()
@@ -70,7 +84,7 @@ impl Platform for GraphicsBackend {
                     unsafe {
                         framebuffer.ptr.copy_from(
                             buffer.as_ptr().cast::<u8>(),
-                            DISPLAY_WIDTH * DISPLAY_HEIGHT * 2,
+                            DISPLAY_WIDTH * DISPLAY_HEIGHT * 4,
                         )
                     }
 
@@ -81,7 +95,17 @@ impl Platform for GraphicsBackend {
             hid.scan_input();
 
             if hid.keys_down().contains(KeyPad::START) {
-                println!("\x1b[21;8HQuero sairrr");
+                console.clear();
+                unsafe {
+                    println!(
+                        "{:?}",
+                        std::slice::from_raw_parts(
+                            top_screen.raw_framebuffer().ptr,
+                            DISPLAY_HEIGHT
+                        )
+                    );
+                }
+                console.flush_buffers();
             }
         }
     }
@@ -90,7 +114,7 @@ impl Platform for GraphicsBackend {
 pub fn init() {
     slint::platform::set_platform(Box::new(GraphicsBackend {
         window: Default::default(),
-        start_time: Instant::now(),
+        start_time: std::time::Instant::now(),
     }))
     .expect("Slint backend already initialized.");
 }
