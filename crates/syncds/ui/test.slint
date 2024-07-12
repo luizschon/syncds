@@ -1,16 +1,29 @@
-export component MainWindow inherits Window {
-    width: 240px;
-    height: 400px;
-    title: "Test";
-    background: #0F0F0F;
-    default-font-family: "Noto Sans";
-    default-font-size: 12px;
+import { VerticalBox, HorizontalBox, Button } from "std-widgets.slint";
+import "dist/Silkscreen-Regular.ttf";
+import "dist/Silkscreen-Bold.ttf";
 
-    magenta := Rectangle {
-        x: 0px;
-        y: parent.height - self.height;
-        height: 20px;
-        width: parent.width * abs(sin(360deg * animation-tick() / 3s));
-        background: #FF00FF;
+export component MainWindow inherits Window {
+    width: 400px;
+    height: 240px;
+    background: blue;
+    default-font-family: "Silkscreen";
+    default-font-size: 20px;
+
+    VerticalBox {
+        Text {
+            text: "cagou nas calças?";
+            font-size: 30px;
+            color: white;
+        }
+
+        Button {
+            text: "sim";
+            height: 30px;
+        }
+
+        Button {
+            text: "com certeza";
+            height: 30px;
+        }
     }
 }
