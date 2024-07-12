@@ -9,7 +9,7 @@ slint.workspace = true
 slint_adapter.workspace = true
 
 [build-dependencies]
-slint-build = "1.6.0"
+slint-build = { git = "https://github.com/slint-ui/slint", branch = "master" }
 
 [package.metadata.cargo-3ds]
 romfs_dir = "romfs"

@@ -5,7 +5,7 @@ resolver = "2"
 [workspace.dependencies]
 ctru-rs = { git = "https://github.com/rust3ds/ctru-rs" }
 ctru-sys = { git = "https://github.com/rust3ds/ctru-rs" }
-slint = { version = "1.6.0", default-features = false, features = [
+slint = { git = "https://github.com/slint-ui/slint", branch = "master", default-features = false, features = [
     "compat-1-2",
     "unsafe-single-threaded",
     "renderer-software",
