@@ -11,4 +11,4 @@ slint = { git = "https://github.com/slint-ui/slint", branch = "master", default-
     "renderer-software",
     "libm",
 ] }
-slint_adapter = { path = "crates/slint_adapter" }
+slint-3ds = { path = "crates/slint_3ds" }

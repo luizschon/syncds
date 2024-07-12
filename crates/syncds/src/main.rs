@@ -4,7 +4,7 @@ slint::include_modules!();
 
 fn main() {
     let apt = Apt::new().expect("Couldn't obtain APT controller");
-    slint_adapter::init();
+    slint_3ds::init();
     let test = MainWindow::new().unwrap();
 
     while apt.main_loop() {

@@ -6,7 +6,7 @@ edition = "2021"
 [dependencies]
 ctru-rs.workspace = true
 slint.workspace = true
-slint_adapter.workspace = true
+slint-3ds.workspace = true
 
 [build-dependencies]
 slint-build = { git = "https://github.com/slint-ui/slint", branch = "master" }

@@ -2291,6 +2291,15 @@ dependencies = [
 ]
 
 [[package]]
+name = "slint-3ds"
+version = "0.1.0"
+dependencies = [
+ "ctru-rs",
+ "ctru-sys",
+ "slint",
+]
+
+[[package]]
 name = "slint-build"
 version = "1.7.0"
 source = "git+https://github.com/slint-ui/slint?branch=master#588ee3e4740eda68b36ff2f55323b2f2522a42b2"
@@ -2310,15 +2319,6 @@ dependencies = [
  "proc-macro2",
  "quote",
  "spin_on",
-]
-
-[[package]]
-name = "slint_adapter"
-version = "0.1.0"
-dependencies = [
- "ctru-rs",
- "ctru-sys",
- "slint",
 ]
 
 [[package]]
@@ -2456,8 +2456,8 @@ version = "0.1.0"
 dependencies = [
  "ctru-rs",
  "slint",
+ "slint-3ds",
  "slint-build",
- "slint_adapter",
 ]
 
 [[package]]
