@@ -1,3 +1,4 @@
+use crate::pixel_format::Rgba8Pixel;
 use ctru::prelude::*;
 use ctru::services::{
     gfx::{Flush, Screen, Swap},
@@ -5,41 +6,46 @@ use ctru::services::{
 };
 use slint::{
     platform::{
-        software_renderer::{MinimalSoftwareWindow, RepaintBufferType, TargetPixel},
+        software_renderer::{MinimalSoftwareWindow, RenderingRotation, RepaintBufferType},
         Platform, WindowAdapter,
     },
     PhysicalSize,
 };
 use std::{cell::RefCell, rc::Rc};
 
-#[derive(Debug, PartialEq, Clone, Copy)]
-struct Rgba8Pixel(u32);
+// Top screen size in 2D mode
+const TOP_DISPLAY_WIDTH: usize = 400;
+const TOP_DISPLAY_HEIGHT: usize = 240;
 
-impl TargetPixel for Rgba8Pixel {
-    fn blend(&mut self, _color: slint::platform::software_renderer::PremultipliedRgbaColor) {
-        ()
-    }
+// Bottom screen size
+const BOTTOM_DISPLAY_WIDTH: usize = 320;
+const _BOTTOM_DISPLAY_HEIGHT: usize = 240;
 
-    fn from_rgb(red: u8, green: u8, blue: u8) -> Self {
-        Self((red as u32) << 24 | (green as u32) << 16 | (blue as u32) << 8 | 0xFF)
-    }
+const DISPLAY_WIDTH: usize = TOP_DISPLAY_WIDTH + BOTTOM_DISPLAY_WIDTH;
+const DISPLAY_HEIGHT: usize = TOP_DISPLAY_HEIGHT;
 
-    fn background() -> Self {
-        Self(u32::MAX)
-    }
-}
+static mut FB1: [Rgba8Pixel; DISPLAY_WIDTH * DISPLAY_HEIGHT] = [Rgba8Pixel {
+    red: 0,
+    green: 0,
+    blue: 0,
+    alpha: 0,
+}; DISPLAY_WIDTH * DISPLAY_HEIGHT];
 
-const DISPLAY_WIDTH: usize = 240;
-const DISPLAY_HEIGHT: usize = 400;
-static mut FB1: [Rgba8Pixel; DISPLAY_WIDTH * DISPLAY_HEIGHT] =
-    [Rgba8Pixel(0); DISPLAY_WIDTH * DISPLAY_HEIGHT];
-
-pub struct GraphicsBackend {
+pub(crate) struct SlintBackend3DS {
     window: RefCell<Option<Rc<MinimalSoftwareWindow>>>,
     start_time: std::time::Instant,
 }
 
-impl Platform for GraphicsBackend {
+impl SlintBackend3DS {
+    pub fn new() -> Self {
+        Self {
+            window: Default::default(),
+            start_time: std::time::Instant::now(),
+        }
+    }
+}
+
+impl Platform for SlintBackend3DS {
     fn create_window_adapter(&self) -> Result<Rc<dyn WindowAdapter>, slint::PlatformError> {
         let window = MinimalSoftwareWindow::new(RepaintBufferType::ReusedBuffer);
         self.window.replace(Some(window.clone()));
@@ -78,13 +84,14 @@ impl Platform for GraphicsBackend {
             if let Some(window) = self.window.borrow().clone() {
                 window.draw_if_needed(|renderer| {
                     gfx.wait_for_vblank();
-                    renderer.render(&mut buffer, DISPLAY_WIDTH);
+                    renderer.set_rendering_rotation(RenderingRotation::Rotate90);
+                    renderer.render(&mut buffer, DISPLAY_HEIGHT);
 
                     let framebuffer = top_screen.raw_framebuffer();
                     unsafe {
                         framebuffer.ptr.copy_from(
                             buffer.as_ptr().cast::<u8>(),
-                            DISPLAY_WIDTH * DISPLAY_HEIGHT * 4,
+                            TOP_DISPLAY_WIDTH * TOP_DISPLAY_HEIGHT * 4,
                         )
                     }
 
@@ -109,12 +116,4 @@ impl Platform for GraphicsBackend {
             }
         }
     }
-}
-
-pub fn init() {
-    slint::platform::set_platform(Box::new(GraphicsBackend {
-        window: Default::default(),
-        start_time: std::time::Instant::now(),
-    }))
-    .expect("Slint backend already initialized.");
 }
