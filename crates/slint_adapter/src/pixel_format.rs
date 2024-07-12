@@ -79,17 +79,17 @@ impl Rgb5A1Pixel {
 
     /// Return red component as avalue between 0 and 255.
     fn red(&self) -> u8 {
-        self.0 & Self::RED_MASK >> 8 as u8
+        (self.0 & Self::RED_MASK >> 8) as u8
     }
 
     /// Return blue component as a value between 0 and 255.
     fn blue(&self) -> u8 {
-        self.0 & Self::BLUE_MASK >> 8 as u8
+        (self.0 & Self::BLUE_MASK >> 8) as u8
     }
 
     /// Return green component as a value between 0 and 255.
     fn green(&self) -> u8 {
-        self.0 & Self::GREEN_MASK << 2 as u8
+        (self.0 & Self::GREEN_MASK << 2) as u8
     }
 
     /// Return alpha component as a value between 0 and 255.
@@ -97,7 +97,7 @@ impl Rgb5A1Pixel {
     /// Since the alpha channel id represented as 1-bit, the only two possible
     /// values are 0 and 255.
     fn alpha(&self) -> u8 {
-        self.0 & 0b1 << 7 as u8
+        (self.0 & 0b1 << 7) as u8
     }
 }
 
